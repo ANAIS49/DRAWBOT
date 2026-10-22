@@ -1,0 +1,141 @@
+# =============================================================================
+# Drawbot — scénario de validation à coller dans le moniteur série (115200 8N1)
+#
+# Coller bloc par bloc en attendant la réponse [OK]/[DATA] avant le suivant.
+# Les lignes commençant par # sont des commentaires : ne pas les copier dans
+# le moniteur (le firmware les retournera comme "Unknown command").
+# =============================================================================
+
+
+# -----------------------------------------------------------------------------
+# 1. Vérifier que le firmware répond
+# -----------------------------------------------------------------------------
+PING
+VERSION
+HELP
+
+
+# -----------------------------------------------------------------------------
+# 2. Tester les capteurs en lecture brute
+# -----------------------------------------------------------------------------
+GETIMU
+GETMAG
+GETENC
+GETPOSE
+
+
+# -----------------------------------------------------------------------------
+# 3. Tester chaque module séparément
+# -----------------------------------------------------------------------------
+TEST_MOTORS
+TEST_ENCODERS
+TEST_IMU
+TEST_MAG
+
+
+# -----------------------------------------------------------------------------
+# 4. Calibration au premier démarrage (robot immobile pour CALIB_GYRO,
+#    espace dégagé sans métal pour CALIB_MAG : il tournera tout seul).
+# -----------------------------------------------------------------------------
+RESET_POSE
+CALIB_GYRO
+CALIB_MAG
+
+
+# -----------------------------------------------------------------------------
+# 5. Cartographier la dynamique PWM ↔ vitesse roue
+# -----------------------------------------------------------------------------
+TEST_PWM_SWEEP
+
+
+# -----------------------------------------------------------------------------
+# 6. Pilotage manuel (l'odométrie doit converger vers la pose attendue)
+# -----------------------------------------------------------------------------
+RESET_POSE
+FORWARD 20
+GETPOSE
+LEFT 90
+GETPOSE
+FORWARD 10
+GETPOSE
+RIGHT 90
+GETPOSE
+FORWARD 40
+GETPOSE
+
+
+# -----------------------------------------------------------------------------
+# 7. Test odométrie : carré 20 cm × 4
+# -----------------------------------------------------------------------------
+RESET_POSE
+TEST_SQUARE
+GETPOSE
+
+
+# -----------------------------------------------------------------------------
+# 8. Test cap : rotation 360°
+# -----------------------------------------------------------------------------
+RESET_POSE
+TEST_TURN_360
+
+
+# -----------------------------------------------------------------------------
+# 9. Réglage PID (exemple, à adapter)
+# -----------------------------------------------------------------------------
+GETPID
+SETPID_SPEED 12.0 60.0 0.1
+SETPID_DIST  6.0 0.3 0.15
+SETPID_HEAD  3.0 0.05 0.4
+GETPID
+
+
+# -----------------------------------------------------------------------------
+# 10. Séquences du cahier des charges
+# -----------------------------------------------------------------------------
+
+# Séquence 1 — Escalier (5 segments)
+RESET_POSE
+SEQ1
+GETPOSE
+
+# Séquence 1 — variante personnalisée (l1 a1 l2 a2 l3)
+RESET_POSE
+SEQ1 25 90 12 -90 35
+GETPOSE
+
+# Séquence 2 — Cercle de rayon 10 cm
+RESET_POSE
+SEQ2 10
+GETPOSE
+
+# Séquence 3 — Flèche orientée Nord, longueur 8 cm
+RESET_POSE
+SEQ3 8
+GETPOSE
+
+
+# -----------------------------------------------------------------------------
+# 11. Fonctionnalités avancées
+# -----------------------------------------------------------------------------
+
+# FA1 — Carrés circonscrits : 5 carrés, premier de 5 cm
+RESET_POSE
+SQUARES 5 5
+GETPOSE
+
+# FA2 — Rosace : 6 pétales, rayon 8 cm
+RESET_POSE
+ROSACE 8 6
+GETPOSE
+
+# FA3 — Rose des vents complète, diamètre 12 cm
+RESET_POSE
+COMPASS 12
+GETPOSE
+
+
+# -----------------------------------------------------------------------------
+# 12. Arrêt propre
+# -----------------------------------------------------------------------------
+STOP
+GETPOSE
